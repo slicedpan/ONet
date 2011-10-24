@@ -11,29 +11,44 @@ namespace ONet
         GameServer _server;
         Socket _socket;
         byte[] buffer;
-        public String lastText = "";
-        public bool newChunk = false;
+        bool newChunk = false;
+        int idNumber;
 
-        public void ReceiveData(IAsyncResult result)
+        public bool NewChunk
         {
-            DataChunk chunk = new DataChunk();
-            chunk.fromBytes(buffer);
-            newChunk = true;
-            if (chunk.DataType == 0)
-            {  
-                _server.End(this);
-            }
-            else
+            get
             {
-                _socket.BeginReceive(buffer, 0, 256, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
+                return newChunk;
             }
         }
 
-        public Connection(GameServer server, Socket socket, DataChunk chunk)
+        public GameMessage getMessage()
+        {
+            newChunk = false;
+            GameMessage msg = new GameMessage();
+            msg.fromBytes(buffer);
+            return msg;
+        }
+
+        public void ReceiveData(IAsyncResult result)
+        {
+            newChunk = true;
+            if (BitConverter.ToUInt16(buffer, 0) == 0)
+            {  
+                _server.End(idNumber);
+            }
+            else
+            {
+                _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
+            }
+        }
+
+        public Connection(GameServer server, Socket socket, int number)
         {
             _socket = socket;
             _server = server;
-            _socket.BeginReceive(buffer, 0, chunk.Size, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
+            idNumber = number;
+            _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
         }
         public void Disconnect()
         {

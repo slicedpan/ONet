@@ -8,36 +8,47 @@ using System.IO;
 
 namespace ONet
 {
-    public class DataChunk
+    public class GameMessage
     {
-        public Vector2 pos;  
-        public int DataType;
- 
-        public virtual int Size
+        public UInt16 DataType;
+        public UInt16 MessageSize;
+        byte[] _message;
+
+        public byte[] Message
         {
             get
             {
-                return 12;
+                return _message;
             }
         }
 
-        public virtual DataChunk fromBytes(byte[] array)
+        public virtual void fromBytes(byte[] array)
         {
-            DataChunk chunk = new DataChunk();
-            chunk.DataType = BitConverter.ToInt32(array, 0);
-            chunk.pos.X = BitConverter.ToSingle(array, 4);
-            chunk.pos.X = BitConverter.ToSingle(array, 8);
-            return chunk;
+            DataType = BitConverter.ToUInt16(array, 0);
+            MessageSize = BitConverter.ToUInt16(array, 2);
+            if (array.Length > 4)
+            {
+                _message = new byte[array.Length - 4];
+                array.CopyTo(_message, 0);
+            }
         }
 
-        public virtual byte[] toBytes()
+        public byte[] toBytes()
         {
-            byte[] array = new byte[12];
+            byte[] array = new byte[4 + _message.Length];
             BitConverter.GetBytes(DataType).CopyTo(array, 0);
-            BitConverter.GetBytes(pos.X).CopyTo(array, 4);
-            BitConverter.GetBytes(pos.Y).CopyTo(array, 8);
-            
+            BitConverter.GetBytes(MessageSize).CopyTo(array, 2);
+            _message.CopyTo(array, 4);
             return array;
+        }
+
+        public static byte[] CreateMessage(UInt16 dataType, byte[] array)
+        {
+            byte[] msgArray = new byte[4 + array.Length];
+            BitConverter.GetBytes(dataType).CopyTo(msgArray, 0);
+            BitConverter.GetBytes((UInt16)array.Length).CopyTo(msgArray, 2);
+            array.CopyTo(msgArray, 4);
+            return msgArray;
         }
 
         public static byte[] disconnectMessage()

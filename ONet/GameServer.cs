@@ -16,24 +16,22 @@ namespace ONet
         Socket socket;
         public bool isActive = false;
         List<Socket> sockets = new List<Socket>();
-        public List<Connection> connections = new List<Connection>();
-        Dictionary<int, DataChunk> _chunks;
+        public Dictionary<int, Connection> connections = new Dictionary<int, Connection>();
         int lastClientNumber = 0;
 
         void Accept(IAsyncResult result)
         {
             Socket s = (Socket)result.AsyncState;
-            _chunks.Add(lastClientNumber, new DataChunk());
-            connections.Add(new Connection(this, s.EndAccept(result), _chunks[lastClientNumber]));
+            connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber));
             ++lastClientNumber;
             s.BeginAccept(new AsyncCallback(Accept), s);
         }
-        public void End(Connection connectionToEnd)
+        public void End(int connectionNumber)
         {
-            connectionToEnd.Disconnect();
-            connections.Remove(connectionToEnd);
+            connections[connectionNumber].Disconnect();
+            connections.Remove(connectionNumber);
         }
-        public GameServer(List<DataChunk> receiveChunks, int port = 8024)
+        public GameServer(int port = 8024)
         {            
             if (currentInstance == null)
             {
@@ -53,7 +51,6 @@ namespace ONet
             socket.Listen(10);
             socket.BeginAccept(new AsyncCallback(Accept), socket);
         }
-        public String LastText = "";
 
         public void Dispose()
         {

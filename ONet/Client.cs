@@ -17,12 +17,34 @@ namespace ONet
         Socket _socket;
         int counter = 0;
         Timer timer;
-        public int attempts = 0;
+        int attempts = 0;
+
         IPEndPoint endPoint;
-        DataChunk _dataChunk;
+        GameMessage _dataChunk;
         byte[] buffer;
         bool newChunk = false;
 
+        public int Attempts
+        {
+            get
+            {
+                return attempts;
+            }
+        }
+        public IPEndPoint EndPoint
+        {
+            get
+            {
+                return endPoint;
+            }
+        }
+        public bool Connected
+        {
+            get
+            {
+                return _socket.Connected;
+            }
+        }
         public bool NewChunk
         {
             get     
@@ -33,31 +55,33 @@ namespace ONet
 
         void Receive(IAsyncResult result)
         {
-
+            newChunk = true;
+            if (BitConverter.ToUInt16(buffer, 0) == 0)
+            {
+                Die();
+            }
+            else
+            {
+                _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+            }
         }
 
         void Connect(IAsyncResult result)
         {
-            _socket.BeginReceive(buffer, 0, _dataChunk.Size, SocketFlags.None, new AsyncCallback(Receive), this);
+            _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
         }
-        public bool Connected
-        {
-            get
-            {
-                return _socket.Connected;
-            }
-        }
-        public void Send(DataChunk dataChunk)
+
+        public void Send(GameMessage dataChunk)
         {
             _socket.Send(dataChunk.toBytes());
         }
-        public DataChunk Receive()
+        public GameMessage getMessage()
         {
+            newChunk = false;
             return _dataChunk;
         }
-        public Client(IPEndPoint endPoint, DataChunk receiveDataChunk)
+        public Client(IPEndPoint endPoint)
         {
-            _dataChunk = receiveDataChunk;
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             TryConnect();
         }
@@ -86,9 +110,14 @@ namespace ONet
             if (_socket.Connected)
             {
                 attempts = 0;
-                _socket.Send(DataChunk.disconnectMessage());
+                _socket.Send(GameMessage.disconnectMessage());
                 _socket.Disconnect(true);
             }
+        }
+        void Die()
+        {
+            if (_socket.Connected)
+                _socket.Disconnect(true);
         }
     }
 }

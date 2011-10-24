@@ -94,7 +94,6 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="Connection.cs" />
-    <Compile Include="DisconnectChunk.cs" />
     <Compile Include="GameServer.cs" />
     <Compile Include="DataChunk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
