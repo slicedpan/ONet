@@ -14,6 +14,16 @@ namespace ONet
         public UInt16 MessageSize;
         byte[] _message;
 
+        public GameMessage()
+        {
+
+        }
+
+        public GameMessage(byte[] array)
+        {
+            fromBytes(array);
+        }
+
         public byte[] Message
         {
             get

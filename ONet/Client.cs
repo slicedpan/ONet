@@ -21,8 +21,11 @@ namespace ONet
 
         IPEndPoint endPoint;
         GameMessage _dataChunk;
+        
         byte[] buffer;
         bool newChunk = false;
+
+        #region accessors
 
         public int Attempts
         {
@@ -53,21 +56,31 @@ namespace ONet
             }
         }
 
+        #endregion
+
         void Receive(IAsyncResult result)
         {
             newChunk = true;
             if (BitConverter.ToUInt16(buffer, 0) == 0)
             {
+                if (disconnect != null)
+                    disconnect(new GameMessage());
                 Die();
             }
             else
             {
+                GameMessage msg = new GameMessage();
+                msg.fromBytes(buffer);
+                if (message != null)
+                    message(msg);
                 _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
             }
         }
 
         void Connect(IAsyncResult result)
         {
+            if (connect != null)
+                connect(new GameMessage());
             _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
         }
 
@@ -83,7 +96,7 @@ namespace ONet
         public Client(IPEndPoint endPoint)
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            TryConnect();
+            //TryConnect();
         }
         void Retry(object state)
         {
@@ -99,6 +112,11 @@ namespace ONet
             if (timer == null)
             {
                 timer = new Timer(new TimerCallback(Retry), timer, 1500, 0);
+            }
+            else if (attempts > 10)
+            {
+                if (timeout != null)
+                    timeout(new GameMessage());
             }
             else
             {
@@ -117,7 +135,48 @@ namespace ONet
         void Die()
         {
             if (_socket.Connected)
+            {
                 _socket.Disconnect(true);
+            }
         }
+
+        #region callbacks
+
+        public delegate void Callback(GameMessage message);
+        Callback connect;
+        public Callback OnConnect
+        {
+            set
+            {
+                connect = value;
+            }
+        }
+        Callback disconnect;
+        public Callback OnDisconnect
+        {
+            set
+            {
+                disconnect = value;
+            }
+        }
+        Callback message;
+        public Callback OnMessage
+        {
+            set
+            {
+                message = value;
+            }
+        }
+        Callback timeout;
+        public Callback OnTimeout
+        {
+            set
+            {
+                timeout = value;
+            }
+        }
+
+        #endregion
+
     }
 }

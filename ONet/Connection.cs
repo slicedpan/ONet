@@ -9,6 +9,10 @@ namespace ONet
     public class Connection
     {
         GameServer _server;
+
+        GameServer.Callback _disconnect;
+        GameServer.Callback _message;
+
         Socket _socket;
         byte[] buffer;
         bool newChunk = false;
@@ -33,6 +37,7 @@ namespace ONet
         public void ReceiveData(IAsyncResult result)
         {
             newChunk = true;
+            _message(idNumber, getMessage());
             if (BitConverter.ToUInt16(buffer, 0) == 0)
             {  
                 _server.End(idNumber);
@@ -43,15 +48,18 @@ namespace ONet
             }
         }
 
-        public Connection(GameServer server, Socket socket, int number)
+        public Connection(GameServer server, Socket socket, int number, GameServer.Callback disconnect, GameServer.Callback message)
         {
             _socket = socket;
             _server = server;
+            _message = message;
+            _disconnect = disconnect;
             idNumber = number;
             _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
         }
         public void Disconnect()
         {
+            _disconnect(idNumber, new GameMessage());
             _socket.Disconnect(false);
         }
     }

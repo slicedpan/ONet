@@ -22,7 +22,8 @@ namespace ONet
         void Accept(IAsyncResult result)
         {
             Socket s = (Socket)result.AsyncState;
-            connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber));
+            connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(clientDisconnect), new Callback(clientMessage)));
+            clientConnect(lastClientNumber, new GameMessage());
             ++lastClientNumber;
             s.BeginAccept(new AsyncCallback(Accept), s);
         }
@@ -51,10 +52,54 @@ namespace ONet
             socket.Listen(10);
             socket.BeginAccept(new AsyncCallback(Accept), socket);
         }
-
         public void Dispose()
         {
             currentInstance = null;
         }
+
+        #region callbacks
+
+        public delegate void Callback(int clientNumber, GameMessage message);
+        Callback clientConnect;
+        Callback clientDisconnect;
+        Callback clientMessage;
+
+        void connectMessage(int clientNumber, GameMessage message)
+        {
+            if (clientConnect != null)
+                clientConnect(clientNumber, message);
+        }
+        void disconnectMessage(int clientNumber, GameMessage message)
+        {
+            if (clientDisconnect != null)
+                clientDisconnect(clientNumber, message);
+        }
+        void message(int clientNumber, GameMessage message)
+        {
+            if (clientMessage != null)
+                clientMessage(clientNumber, message);
+        }
+        public Callback OnClientConnect
+        {
+            set
+            {
+                clientConnect = value;
+            }
+        }
+        public Callback OnClientDisconnect
+        {
+            set
+            {
+                clientDisconnect = value;
+            }
+        }
+        public Callback OnClientMessage
+        {
+            set
+            {
+                clientMessage = value;
+            }
+        }
+        #endregion
     }
 }

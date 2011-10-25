@@ -95,7 +95,7 @@
     <Compile Include="Client.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="GameServer.cs" />
-    <Compile Include="DataChunk.cs" />
+    <Compile Include="GameMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
