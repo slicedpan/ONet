@@ -55,6 +55,7 @@ namespace ONet
             _message = message;
             _disconnect = disconnect;
             idNumber = number;
+            buffer = new byte[512];
             _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
         }
         public void Disconnect()
