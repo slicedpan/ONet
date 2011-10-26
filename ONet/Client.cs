@@ -95,6 +95,7 @@ namespace ONet
         }
         public Client(IPEndPoint endPoint)
         {
+            buffer = new byte[512];
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             //TryConnect();
         }
