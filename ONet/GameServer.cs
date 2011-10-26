@@ -16,21 +16,21 @@ namespace ONet
         Socket socket;
         public bool isActive = false;
         List<Socket> sockets = new List<Socket>();
-        public Dictionary<int, Connection> connections = new Dictionary<int, Connection>();
+        public Dictionary<int, Connection> Connections = new Dictionary<int, Connection>();
         int lastClientNumber = 0;
 
         void Accept(IAsyncResult result)
         {
             Socket s = (Socket)result.AsyncState;
-            connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(clientDisconnect), new Callback(message)));
+            Connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(clientDisconnect), new Callback(message)));
             clientConnect(lastClientNumber, new GameMessage());
             ++lastClientNumber;
             s.BeginAccept(new AsyncCallback(Accept), s);
         }
         public void End(int connectionNumber)
         {
-            connections[connectionNumber].Disconnect();
-            connections.Remove(connectionNumber);
+            Connections[connectionNumber].Disconnect();
+            Connections.Remove(connectionNumber);
         }
         public GameServer(int port = 8024)
         {            

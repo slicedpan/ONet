@@ -14,6 +14,13 @@ namespace ONet
         GameServer.Callback _message;
 
         Socket _socket;
+        public Socket Socket
+        {
+            get
+            {
+                return _socket;
+            }
+        }
         byte[] buffer;
         bool newChunk = false;
         int idNumber;
