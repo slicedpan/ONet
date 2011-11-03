@@ -15,15 +15,12 @@ namespace ONet
     public class Client
     {
         Socket _socket;
-        int counter = 0;
         Timer timer;
         int attempts = 0;
 
         IPEndPoint endPoint;
-        GameMessage _dataChunk;
         
         byte[] buffer;
-        bool newChunk = false;
 
         #region accessors
 
@@ -48,19 +45,11 @@ namespace ONet
                 return _socket.Connected;
             }
         }
-        public bool NewChunk
-        {
-            get     
-            {
-                return newChunk;
-            }
-        }
 
         #endregion
 
         void Receive(IAsyncResult result)
-        {
-            newChunk = true;
+        {   
             if (BitConverter.ToUInt16(buffer, 0) == 0)
             {
                 if (disconnect != null)
@@ -88,15 +77,12 @@ namespace ONet
         {
             _socket.Send(dataChunk.toBytes());
         }
-        public GameMessage getMessage()
-        {
-            newChunk = false;
-            return _dataChunk;
-        }
+
         public Client(IPEndPoint endPoint)
         {
             buffer = new byte[512];
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.endPoint = endPoint;
             //TryConnect();
         }
         void Retry(object state)

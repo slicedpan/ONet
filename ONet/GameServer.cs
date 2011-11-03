@@ -22,8 +22,8 @@ namespace ONet
         void Accept(IAsyncResult result)
         {
             Socket s = (Socket)result.AsyncState;
-            Connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(clientDisconnect), new Callback(message)));
-            clientConnect(lastClientNumber, new GameMessage());
+            Connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(disconnectMessage), new Callback(message)));
+            connectMessage(lastClientNumber, new GameMessage());
             ++lastClientNumber;
             s.BeginAccept(new AsyncCallback(Accept), s);
         }
