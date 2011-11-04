@@ -68,10 +68,12 @@ namespace ONet
 
         void Connect(IAsyncResult result)
         {
+          
             if (connect != null)
                 connect(new GameMessage());
             try
             {
+                _socket.EndConnect(result);
                 _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
             }
             catch (SocketException se)
