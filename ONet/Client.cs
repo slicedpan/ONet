@@ -17,7 +17,7 @@ namespace ONet
         Socket _socket;
         Timer timer;
         int attempts = 0;
-
+        public string socketMessage = "";
         IPEndPoint endPoint;
         
         byte[] buffer;
@@ -49,7 +49,7 @@ namespace ONet
         #endregion
 
         void Receive(IAsyncResult result)
-        {   
+        {
             if (BitConverter.ToUInt16(buffer, 0) == 0)
             {
                 if (disconnect != null)
@@ -70,7 +70,14 @@ namespace ONet
         {
             if (connect != null)
                 connect(new GameMessage());
-            _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+            try
+            {
+                _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+            }
+            catch (SocketException se)
+            {
+                socketMessage = se.Message;
+            }
         }
 
         public void Send(GameMessage dataChunk)
