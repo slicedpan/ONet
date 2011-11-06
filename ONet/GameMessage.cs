@@ -13,6 +13,8 @@ namespace ONet
         public UInt16 DataType;
         public UInt16 MessageSize;
         byte[] _message;
+        public const ushort Disconnect = 255;
+        public const ushort Initialise = 254;
 
         public GameMessage()
         {
@@ -39,7 +41,10 @@ namespace ONet
             if (array.Length > 4)
             {
                 _message = new byte[array.Length - 4];
-                array.CopyTo(_message, 0);
+                for (int i = 0; i < array.Length - 4; ++i)
+                {
+                    _message[i] = array[i + 4];
+                }
             }
         }
 
@@ -61,11 +66,37 @@ namespace ONet
             return msgArray;
         }
 
-        public static byte[] disconnectMessage()
+        public static byte[] disconnectMessage(string reasonForDisconnect)
         {
-            byte[] array = new byte[1];
-            BitConverter.GetBytes((int)0).CopyTo(array, 0);
+            byte[] array = new byte[4 + reasonForDisconnect.Length];            
+            BitConverter.GetBytes((ushort)Disconnect).CopyTo(array, 0);
+            BitConverter.GetBytes((ushort)reasonForDisconnect.Length).CopyTo(array, 2);
+            ASCIIEncoding.ASCII.GetBytes(reasonForDisconnect).CopyTo(array, 4);
             return array;
+        }
+        public static byte[] initialisationMessage(int idNumber)
+        {
+            byte[] array = new byte[4];
+            BitConverter.GetBytes(Initialise).CopyTo(array, 0);
+            BitConverter.GetBytes((ushort)idNumber).CopyTo(array, 2);
+            return array;
+        }
+        public string messageAsString()
+        {
+            bool done = false;
+            byte[] array = new byte[MessageSize];
+            int i = 0;
+            while (!done)
+            {
+                if (_message[i] != 0)
+                    array[i] = _message[i];
+                else
+                {
+                    done = true;
+                }
+                ++i;
+            }
+            return new String(ASCIIEncoding.ASCII.GetChars(array));
         }
     }
 }

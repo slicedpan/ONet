@@ -22,10 +22,17 @@ namespace ONet
         void Accept(IAsyncResult result)
         {
             Socket s = (Socket)result.AsyncState;
-            Connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(disconnectMessage), new Callback(message)));
+            Connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(disconnectMessage), new Callback(message), new ErrorCallback(errorMessage)));
             connectMessage(lastClientNumber, new GameMessage());
             ++lastClientNumber;
-            s.BeginAccept(new AsyncCallback(Accept), s);
+            try
+            {
+                s.BeginAccept(new AsyncCallback(Accept), s);
+            }
+            catch (Exception se)
+            {
+                errorMessage(se.Message);
+            }
         }
         public void End(int connectionNumber)
         {
@@ -48,9 +55,23 @@ namespace ONet
         {
             isActive = true;
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.Bind(new IPEndPoint(IPAddress.Any, 8024));
-            socket.Listen(10);
-            socket.BeginAccept(new AsyncCallback(Accept), socket);
+            try
+            {
+                socket.Bind(new IPEndPoint(IPAddress.Any, 8024));
+                socket.Listen(10);
+                socket.BeginAccept(new AsyncCallback(Accept), socket);
+            }
+            catch (Exception se)
+            {
+                errorMessage(se.Message);
+            }
+        }
+        void errorMessage(string message)
+        {
+            if (error != null)
+            {
+                error(message);
+            }
         }
         public void Dispose()
         {
@@ -98,6 +119,15 @@ namespace ONet
             set
             {
                 clientMessage = value;
+            }
+        }
+        public delegate void ErrorCallback(string message);
+        ErrorCallback error;
+        public ErrorCallback OnError
+        {
+            set
+            {
+                error = value;
             }
         }
         #endregion

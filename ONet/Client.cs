@@ -19,6 +19,14 @@ namespace ONet
         int attempts = 0;
         public string socketMessage = "";
         IPEndPoint endPoint;
+        int id = -1;
+        public int IDNumber
+        {
+            get
+            {
+                return id;
+            }
+        }
         
         byte[] buffer;
 
@@ -37,6 +45,10 @@ namespace ONet
             {
                 return endPoint;
             }
+            set
+            {
+                endPoint = value;
+            }
         }
         public bool Connected
         {
@@ -50,20 +62,40 @@ namespace ONet
 
         void Receive(IAsyncResult result)
         {
-            if (BitConverter.ToUInt16(buffer, 0) == 0)
+            if (BitConverter.ToUInt16(buffer, 0) == GameMessage.Disconnect)
             {
+                GameMessage msg = new GameMessage();
+                msg.fromBytes(buffer);
                 if (disconnect != null)
-                    disconnect(new GameMessage());
+                    disconnect(msg);
                 Die();
             }
             else
             {
-                GameMessage msg = new GameMessage();
-                msg.fromBytes(buffer);
-                if (message != null)
-                    message(msg);
-                _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+                if (BitConverter.ToUInt16(buffer, 0) == GameMessage.Initialise)
+                {
+                    id = BitConverter.ToUInt16(buffer, 2);
+                }
+                else
+                {
+                    GameMessage msg = new GameMessage();
+                    msg.fromBytes(buffer);
+                    if (message != null)
+                        message(msg);
+                }
+                if (_socket.Connected)
+                {
+                    try
+                    {
+                        _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+                    }
+                    catch (Exception se)
+                    {
+                        Error(se.Message);
+                    }
+                }
             }
+
         }
 
         void Connect(IAsyncResult result)
@@ -76,15 +108,24 @@ namespace ONet
                 _socket.EndConnect(result);
                 _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
             }
-            catch (SocketException se)
+            catch (Exception se)
             {
-                socketMessage = se.Message;
+                error(se.Message);
             }
+            timer.Dispose();
+            timer = null;
         }
 
         public void Send(GameMessage dataChunk)
         {
-            _socket.Send(dataChunk.toBytes());
+            try
+            {
+                _socket.Send(dataChunk.toBytes());
+            }
+            catch (Exception se)
+            {
+                Error(se.Message);
+            }
         }
 
         public Client(IPEndPoint endPoint)
@@ -104,7 +145,14 @@ namespace ONet
         }
         public void TryConnect()
         {
-            _socket.BeginConnect(endPoint, new AsyncCallback(Connect), _socket);
+            try
+            {
+                _socket.BeginConnect(endPoint, new AsyncCallback(Connect), _socket);
+            }
+            catch (Exception se)
+            {
+                Error(se.Message);
+            }
             if (timer == null)
             {
                 timer = new Timer(new TimerCallback(Retry), timer, 1500, 0);
@@ -119,20 +167,44 @@ namespace ONet
                 timer.Change(1500, 0);
             }
         }
-        public void Disconnect()
+        public void Disconnect(string reasonForDisconnect)
         {
             if (_socket.Connected)
             {
                 attempts = 0;
-                _socket.Send(GameMessage.disconnectMessage());
-                _socket.Disconnect(true);
+                try
+                {
+                    _socket.Send(GameMessage.disconnectMessage(reasonForDisconnect));
+                }
+                catch (Exception se)
+                {
+                    Error(se.Message);
+                }
+                    /*
+                catch (ObjectDisposedException oe)
+                {
+                    Error("Object Disposed" + oe.Message);
+                }
+                catch (Exception e)
+                {
+                    Error("Exception" + e.Message);
+                }*/
+                Die();
             }
         }
         void Die()
         {
+            _socket.Shutdown(SocketShutdown.Both);
             if (_socket.Connected)
             {
                 _socket.Disconnect(true);
+            }
+        }
+        void Error(string errorMsg)
+        {
+            if (error != null)
+            {
+                error(errorMsg);
             }
         }
 
@@ -169,6 +241,15 @@ namespace ONet
             set
             {
                 timeout = value;
+            }
+        }
+        public delegate void ErrorCallback(String errorMessage);
+        ErrorCallback error;
+        public ErrorCallback OnError
+        {
+            set
+            {
+                error = value;
             }
         }
 
