@@ -87,7 +87,7 @@ namespace ONet
                 {
                     try
                     {
-                        _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+                        _socket.BeginReceive(buffer, 0, 2048, SocketFlags.None, new AsyncCallback(Receive), this);
                     }
                     catch (Exception se)
                     {
@@ -106,7 +106,7 @@ namespace ONet
             try
             {
                 _socket.EndConnect(result);
-                _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(Receive), this);
+                _socket.BeginReceive(buffer, 0, 2048, SocketFlags.None, new AsyncCallback(Receive), this);
             }
             catch (Exception se)
             {
@@ -130,7 +130,7 @@ namespace ONet
 
         public Client(IPEndPoint endPoint)
         {
-            buffer = new byte[512];
+            buffer = new byte[2048];
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.endPoint = endPoint;
             //TryConnect();

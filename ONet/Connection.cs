@@ -59,7 +59,7 @@ namespace ONet
                 {
                     try
                     {
-                        _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
+                        _socket.BeginReceive(buffer, 0, 2048, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
                     }
                     catch (Exception se)
                     {
@@ -77,16 +77,24 @@ namespace ONet
             _message = message;
             _disconnect = disconnect;
             idNumber = number;
-            buffer = new byte[512];
+            buffer = new byte[2048];
             try
             {
-                _socket.BeginReceive(buffer, 0, 512, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
+                _socket.BeginReceive(buffer, 0, 2048, SocketFlags.None, new AsyncCallback(ReceiveData), _socket);
                 _socket.Send(GameMessage.initialisationMessage(number));
             }
             catch (Exception se)
             {
                 reportError(se.Message);
             }
+        }
+        public void Send(GameMessage message)
+        {
+            Send(message.toBytes());
+        }
+        public void Send(byte[] array)
+        {
+            _socket.Send(array);
         }
         public void Disconnect()
         {
