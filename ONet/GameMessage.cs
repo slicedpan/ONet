@@ -12,13 +12,38 @@ namespace ONet
     {
         public UInt16 DataType;
         public UInt16 MessageSize;
+        public UInt16 index;
+
         byte[] _message;
-        public const ushort Disconnect = 255;
-        public const ushort Initialise = 254;
+        public const ushort Disconnect = 65535;
+        public const ushort Initialise = 65534;
+        public const ushort Bundle = 65533;
 
         public GameMessage()
         {
 
+        }
+
+        public static GameMessage MessageBundle(GameMessage[] messages)
+        {
+            ushort length = 0;            
+            for (int i = 0; i < messages.Length; ++i)
+            {
+                length += messages[i].MessageSize;
+                length += 6;
+            }
+            byte[] array = new byte[length + 6];
+            BitConverter.GetBytes(Bundle).CopyTo(array, 0);
+            BitConverter.GetBytes(length).CopyTo(array, 2);
+            BitConverter.GetBytes((ushort)messages.Length).CopyTo(array, 4);
+            length = 6;
+            for (int i = 0; i < messages.Length; ++i)
+            {
+                messages[i].toBytes().CopyTo(array, length);
+                length += messages[i].MessageSize;
+                length += 6;
+            }
+            return new GameMessage(array);
         }
 
         public GameMessage(byte[] array)
@@ -34,51 +59,59 @@ namespace ONet
             }
         }
 
-        public virtual void fromBytes(byte[] array)
+        public void fromBytes(byte[] array)
         {
-            DataType = BitConverter.ToUInt16(array, 0);
-            MessageSize = BitConverter.ToUInt16(array, 2);
-            if (array.Length > 4)
+            fromBytes(array, 0);
+        }
+        public void fromBytes(byte[] array, int startIndex)
+        {
+            DataType = BitConverter.ToUInt16(array, startIndex);
+            MessageSize = BitConverter.ToUInt16(array, startIndex + 2);
+            index = BitConverter.ToUInt16(array, startIndex + 4);
+            if (MessageSize > 6)
             {
-                _message = new byte[array.Length - 4];
-                for (int i = 0; i < array.Length - 4; ++i)
+                _message = new byte[MessageSize];
+                for (int i = 0; i < MessageSize; ++i)
                 {
-                    _message[i] = array[i + 4];
+                    _message[i] = array[i + 6 + startIndex];
                 }
             }
         }
 
         public byte[] toBytes()
         {
-            byte[] array = new byte[4 + _message.Length];
+            byte[] array = new byte[6 + _message.Length];
             BitConverter.GetBytes(DataType).CopyTo(array, 0);
             BitConverter.GetBytes(MessageSize).CopyTo(array, 2);
-            _message.CopyTo(array, 4);
+            BitConverter.GetBytes(index).CopyTo(array, 4);
+            _message.CopyTo(array, 6);
             return array;
         }
 
         public static byte[] CreateMessage(UInt16 dataType, byte[] array)
         {
-            byte[] msgArray = new byte[4 + array.Length];
+            byte[] msgArray = new byte[6 + array.Length];
             BitConverter.GetBytes(dataType).CopyTo(msgArray, 0);
             BitConverter.GetBytes((UInt16)array.Length).CopyTo(msgArray, 2);
-            array.CopyTo(msgArray, 4);
+            BitConverter.GetBytes((UInt16)0).CopyTo(msgArray, 4);
+            array.CopyTo(msgArray, 6);
             return msgArray;
         }
 
         public static byte[] disconnectMessage(string reasonForDisconnect)
         {
-            byte[] array = new byte[4 + reasonForDisconnect.Length];            
+            byte[] array = new byte[6 + reasonForDisconnect.Length];            
             BitConverter.GetBytes((ushort)Disconnect).CopyTo(array, 0);
-            BitConverter.GetBytes((ushort)reasonForDisconnect.Length).CopyTo(array, 2);
-            ASCIIEncoding.ASCII.GetBytes(reasonForDisconnect).CopyTo(array, 4);
+            BitConverter.GetBytes((ushort)reasonForDisconnect.Length).CopyTo(array, 2);            
+            ASCIIEncoding.ASCII.GetBytes(reasonForDisconnect).CopyTo(array, 6);
             return array;
         }
         public static byte[] initialisationMessage(int idNumber)
         {
-            byte[] array = new byte[4];
+            byte[] array = new byte[6];
             BitConverter.GetBytes(Initialise).CopyTo(array, 0);
-            BitConverter.GetBytes((ushort)idNumber).CopyTo(array, 2);
+            BitConverter.GetBytes((ushort)0).CopyTo(array, 2);
+            BitConverter.GetBytes((ushort)idNumber).CopyTo(array, 4);
             return array;
         }
         public string messageAsString()

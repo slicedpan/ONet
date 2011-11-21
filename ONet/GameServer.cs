@@ -76,6 +76,7 @@ namespace ONet
         public void Dispose()
         {
             currentInstance = null;
+            socket.Dispose();
         }
 
         #region callbacks

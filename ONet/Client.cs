@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace ONet
 {
-    public class Client
+    public class Client : IDisposable
     {
         Socket _socket;
         Timer timer;
@@ -251,6 +251,15 @@ namespace ONet
             {
                 error = value;
             }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            _socket.Dispose();
         }
 
         #endregion
