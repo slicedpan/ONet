@@ -100,9 +100,11 @@ namespace ONet
 
         void Connect(IAsyncResult result)
         {
-          
+
             if (connect != null)
+            {
                 connect(new GameMessage());
+            }
             try
             {
                 _socket.EndConnect(result);
