@@ -78,6 +78,13 @@ namespace ONet
             currentInstance = null;
             socket.Dispose();
         }
+        public void Send(GameMessage message)
+        {
+            foreach (Connection conn in Connections.Values)
+            {
+                conn.Send(message);
+            }
+        }
 
         #region callbacks
 

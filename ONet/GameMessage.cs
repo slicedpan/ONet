@@ -77,6 +77,11 @@ namespace ONet
                 }
             }
         }
+        public void SetMessage(byte[] array)
+        {
+            MessageSize = (ushort)array.Length;
+            _message = array;
+        }
 
         public byte[] toBytes()
         {
