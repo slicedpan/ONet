@@ -79,7 +79,8 @@ namespace ONet
         }
         public void SetMessage(byte[] array)
         {
-            MessageSize = (ushort)array.Length;
+            MessageSize = (ushort) array.Length;
+            MessageSize += 6;
             _message = array;
         }
 
