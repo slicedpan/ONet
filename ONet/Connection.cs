@@ -93,7 +93,7 @@ namespace ONet
             Send(message.toBytes());
         }
         public void Send(byte[] array)
-        {
+        {            
             _socket.Send(array);
         }
         public void Disconnect()

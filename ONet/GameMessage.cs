@@ -24,6 +24,11 @@ namespace ONet
 
         }
 
+        public static GameMessage MessageBundle(List<GameMessage> messages)
+        {
+            return MessageBundle(messages.ToArray());
+        }
+
         public static GameMessage MessageBundle(GameMessage[] messages)
         {
             ushort length = 0;            
@@ -44,6 +49,20 @@ namespace ONet
                 length += 6;
             }
             return new GameMessage(array);
+        }
+
+        public static List<GameMessage> SplitBundle(GameMessage bundleMessage)
+        {
+            List<GameMessage> retList = new List<GameMessage>();
+            int offset = 0;
+            for (int i = 0; i < bundleMessage.index; ++i)
+            {
+                retList.Add(new GameMessage());
+                retList[i].fromBytes(bundleMessage.Message, offset);
+                offset += retList[i].MessageSize;
+                offset += 6;
+            }
+            return retList;
         }
 
         public GameMessage(byte[] array)
@@ -68,7 +87,7 @@ namespace ONet
             DataType = BitConverter.ToUInt16(array, startIndex);
             MessageSize = BitConverter.ToUInt16(array, startIndex + 2);
             index = BitConverter.ToUInt16(array, startIndex + 4);
-            if (MessageSize > 6)
+            if (MessageSize > 0)
             {
                 _message = new byte[MessageSize];
                 for (int i = 0; i < MessageSize; ++i)
@@ -79,8 +98,7 @@ namespace ONet
         }
         public void SetMessage(byte[] array)
         {
-            MessageSize = (ushort) array.Length;
-            MessageSize += 6;
+            MessageSize = (ushort) array.Length; 
             _message = array;
         }
 
