@@ -130,23 +130,22 @@ namespace ONet
             }
         }
 
-        public Client(IPEndPoint endPoint)
+        public Client()
         {
             buffer = new byte[2048];
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.endPoint = endPoint;
-            //TryConnect();
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);            
         }
         void Retry(object state)
         {
             if (_socket.Connected == false)
             {
                 ++attempts;
-                TryConnect();
+                TryConnect(endPoint);
             }
         }
-        public void TryConnect()
+        public void TryConnect(IPEndPoint endPoint)
         {
+            this.endPoint = endPoint;
             try
             {
                 _socket.BeginConnect(endPoint, new AsyncCallback(Connect), _socket);
