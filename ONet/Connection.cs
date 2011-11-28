@@ -93,8 +93,15 @@ namespace ONet
             Send(message.toBytes());
         }
         public void Send(byte[] array)
-        {            
-            _socket.Send(array);
+        {
+            try
+            {
+                _socket.Send(array);
+            }
+            catch (SocketException se)
+            {
+                reportError(se.Message);
+            }
         }
         public void Disconnect()
         {
