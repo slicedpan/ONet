@@ -105,11 +105,19 @@ namespace ONet
 
         public byte[] toBytes()
         {
-            byte[] array = new byte[6 + _message.Length];
+            byte[] array;
+            if (_message != null)
+            {
+                array = new byte[6 + _message.Length];
+                _message.CopyTo(array, 6);
+            }
+            else
+            {
+                array = new byte[6];
+            }
             BitConverter.GetBytes(DataType).CopyTo(array, 0);
             BitConverter.GetBytes(MessageSize).CopyTo(array, 2);
-            BitConverter.GetBytes(index).CopyTo(array, 4);
-            _message.CopyTo(array, 6);
+            BitConverter.GetBytes(index).CopyTo(array, 4);           
             return array;
         }
 

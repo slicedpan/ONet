@@ -99,7 +99,7 @@ namespace ONet
             {
                 _socket.Send(array);
             }
-            catch (SocketException se)
+            catch (Exception se)
             {
                 reportError(se.Message);
             }
