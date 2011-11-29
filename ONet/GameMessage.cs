@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
+
 namespace ONet
 {
     public class GameMessage

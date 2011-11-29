@@ -5,6 +5,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Net;
 using Microsoft.Xna.Framework;
+using System.Collections.Concurrent;
 
 namespace ONet
 {
@@ -16,13 +17,13 @@ namespace ONet
         Socket socket;
         public bool isActive = false;
         List<Socket> sockets = new List<Socket>();
-        public Dictionary<int, Connection> Connections = new Dictionary<int, Connection>();
+        public ConcurrentDictionary<int, Connection> Connections = new ConcurrentDictionary<int, Connection>();
         int lastClientNumber = 0;
 
         void Accept(IAsyncResult result)
         {
             Socket s = (Socket)result.AsyncState;
-            Connections.Add(lastClientNumber, new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(disconnectMessage), new Callback(message), new ErrorCallback(errorMessage)));
+            Connections[lastClientNumber] = new Connection(this, s.EndAccept(result), lastClientNumber, new Callback(disconnectMessage), new Callback(message), new ErrorCallback(errorMessage));
             connectMessage(lastClientNumber, new GameMessage());
             ++lastClientNumber;
             try
@@ -37,7 +38,8 @@ namespace ONet
         public void End(int connectionNumber)
         {
             Connections[connectionNumber].Disconnect();
-            Connections.Remove(connectionNumber);
+            Connection junk;
+            Connections.TryRemove(connectionNumber, out junk);
         }
         public GameServer(int port = 8024)
         {            

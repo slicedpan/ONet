@@ -50,7 +50,8 @@ namespace ONet
                 _disconnect(idNumber, getMessage());
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close(2);
-                _server.Connections.Remove(idNumber);
+                Connection junk;
+                _server.Connections.TryRemove(idNumber, out junk);
             }
             else
             {
