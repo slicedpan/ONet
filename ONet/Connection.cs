@@ -46,10 +46,17 @@ namespace ONet
         {
             newChunk = true;            
             if (BitConverter.ToUInt16(buffer, 0) == GameMessage.Disconnect)
-            {
-                _disconnect(idNumber, getMessage());
-                _socket.Shutdown(SocketShutdown.Both);
-                _socket.Close(2);
+            {                
+                try
+                {
+                    _disconnect(idNumber, getMessage());
+                    _socket.Shutdown(SocketShutdown.Both);
+                    _socket.Close(2);                    
+                }
+                catch (Exception e)
+                {
+                    _error(e.Message);
+                }
                 Connection junk;
                 _server.Connections.TryRemove(idNumber, out junk);
             }
