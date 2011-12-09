@@ -97,13 +97,15 @@ namespace ONet
             }
         }
         public void Send(GameMessage message)
-        {
+        {            
             Send(message.toBytes());
         }
         public void Send(byte[] array)
         {
             try
             {
+                if (array.Length > 8192)
+                    return;
                 _socket.Send(array);
             }
             catch (Exception se)

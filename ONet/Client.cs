@@ -121,6 +121,8 @@ namespace ONet
         {
             try
             {
+                if (dataChunk.MessageSize > 8184)
+                    return;
                 _socket.Send(dataChunk.toBytes());
             }
             catch (Exception se)
